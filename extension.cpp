@@ -128,7 +128,7 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
         RETURN_META(MRES_SUPERCEDE);
     }
 
-    if (owner > 0 && !g_Hooked[owner]->CanSee(client))
+    if (IsEntityIndexInRange(owner) && !g_Hooked[owner]->CanSee(client))
     {
         // blocked
         RETURN_META(MRES_SUPERCEDE);
@@ -290,12 +290,6 @@ static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* para
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
-    }
-
-    if (!(params[2] >= 1 && params[2] < MAX_EDICT))
-    {
-        // out-of-range
-        return pContext->ThrowNativeError("Owner %d is out-of-range.", params[2]);
     }
 
     if (g_Hooked[params[1]] != nullptr)
