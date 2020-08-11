@@ -29,23 +29,9 @@ def CopyFiles(src, dest, files):
     builder.AddCopy(source_path, dest_entry)
 
 # Include files 
-CopyFiles('include', 'addons/sourcemod/scripting/include',
+CopyFiles('.', 'addons/sourcemod/scripting/include',
   [ 'TransmitManager.inc' ]
 )
-
-# GameData files
-#CopyFiles('gamedata', 'addons/sourcemod/gamedata',
-#  [ 'myfile.txt',
-#  'file2.txt'
-#  ]
-#)
-
-# Config Files
-#CopyFiles('configs', 'addons/sourcemod/configs',
-#  [ 'configfile.cfg',
-#  'otherconfig.cfg,
-#  ]
-#)
 
 # Copy binaries.
 for cxx_task in Extension.extensions:
