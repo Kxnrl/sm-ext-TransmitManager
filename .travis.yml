@@ -1,0 +1,55 @@
+language: cpp
+branches:
+  only:
+  - master
+  except:
+  - /^(?i:release)-.*$/
+env:
+  global:
+  - DEPS_DIR=${HOME}/deps
+  - BRANCH=1.10-dev
+before_install:
+- git clone https://github.com/alliedmodders/ambuild ${DEPS_DIR}/ambuild
+jobs:
+  include:
+  - name: Linux
+    dist: xenial
+    python: 3
+    before_script:
+    - sudo apt-get install -y gcc-multilib g++-multilib binutils python3-setuptools
+    - |
+      pushd ${DEPS_DIR}/ambuild
+      sudo python3 setup.py install
+      popd
+    - chmod +x build.sh
+    script:
+    - "./build.sh"
+  - name: Windows
+    os: windows
+    python: 3.8
+    env:
+    - PATH=/c/Python38:/c/Python38/Scripts:${PATH}
+    before_script:
+    - choco install -y visualstudio2019buildtools python3 --package-parameters "--add
+      Microsoft.VisualStudio.Component.VC.Tools.x86.x64";
+    - |
+      pushd ${DEPS_DIR}/ambuild
+      python setup.py install
+      popd
+    script:
+    - "./build.bat"
+before_deploy:
+  - git config --local user.name "Kxnrl"
+  - git config --local user.email "kyle@kxnrl.com"
+  - export TRAVIS_TAG=release-$TRAVIS_BUILD_NUMBER
+  - git tag $TRAVIS_TAG
+deploy:
+  provider: releases
+  api_key: $token
+  file:
+  - build/package/addons/sourcemod/extensions/kxnrl.hooks.ext.2.csgo.dll
+  - build/package/addons/sourcemod/extensions/kxnrl.hooks.ext.2.csgo.so
+  - build/package/addons/sourcemod/scripting/include/TransmitManager.inc
+  on:
+    repo: Kxnrl/sm-ext-TransmitManager
+  skip_cleanup: 'true'
