@@ -187,6 +187,12 @@ void TransmitManager::SDK_OnUnload()
 
 void TransmitManager::OnEntityDestroyed(CBaseEntity* pEntity)
 {
+    if (!pEntity)
+    {
+        smutils->LogError(myself, "OnEntityDestroyed -> nullptr detected...");
+        return;
+    }
+
     auto entRef = gamehelpers->EntityToReference(pEntity);
     auto entity = gamehelpers->ReferenceToIndex(entRef);
 
@@ -202,29 +208,17 @@ void TransmitManager::OnEntityDestroyed(CBaseEntity* pEntity)
         return;
     }
 
-    UnhookEntity(pEntity);
+    UnhookEntity(entity);
 }
 
 void TransmitManager::OnClientPutInServer(int client)
 {
-    auto*edict = gamehelpers->EdictOfIndex(client);
-    if (!edict || edict->IsFree())
+    auto *pPlayer = playerhelpers->GetGamePlayer(client);
+    if (!pPlayer || pPlayer->IsFakeClient())
     {
         return;
     }
-    auto*player = playerhelpers->GetGamePlayer(edict);
-    if (!player)
-    {
-        return;
-    }
-    auto*unk = edict->GetUnknown();
-    if (!unk)
-    {
-        return;
-    }
-
-    auto*pEntity = unk->GetBaseEntity();
-
+  
     for (auto i = 1; i < MAX_EDICT; i++)
     {
         if (g_Hooked[i] == nullptr)
@@ -235,35 +229,31 @@ void TransmitManager::OnClientPutInServer(int client)
 
         g_Hooked[i]->SetSee(client, true);
     }
-
-    // hooking self
-    HookEntity(pEntity);
 }
 
 void TransmitManager::OnClientDisconnecting(int client)
 {
-    auto* edict = gamehelpers->EdictOfIndex(client);
-    if (!edict || edict->IsFree())
+    auto* pPlayer = playerhelpers->GetGamePlayer(client);
+    if (!pPlayer || pPlayer->IsFakeClient())
     {
-        return;
-    }
-    auto* player = playerhelpers->GetGamePlayer(edict);
-    if (!player || !player->IsInGame())
-    {
-        return;
-    }
-    auto* unk = edict->GetUnknown();
-    if (!unk)
-    {
+        // not in-game = no hook
         return;
     }
 
-    UnhookEntity(unk->GetBaseEntity());
+    UnhookEntity(client);
 }
 
 void TransmitManager::HookEntity(CBaseEntity* pEntity)
 {
     auto index = gamehelpers->EntityToBCompatRef(pEntity);
+
+    if (!IsEntityIndexInRange(index))
+    {
+        // out-of-range
+        smutils->LogError(myself, "Failed to hook entity %d -> out-of-range.", index);
+        return;
+    }
+
     if (g_Hooked[index] != nullptr)
     {
         smutils->LogError(myself, "Entity Hook listener [%d] is not nullptr. Try to remove.", index);
@@ -271,19 +261,27 @@ void TransmitManager::HookEntity(CBaseEntity* pEntity)
     }
 
     g_Hooked[index] = new HookingEntity(pEntity);
+    //smutils->LogMessage(myself, "Hooked entity %d", index);
 }
 
-void TransmitManager::UnhookEntity(CBaseEntity* pEntity)
+void TransmitManager::UnhookEntity(int index)
 {
-    auto index = gamehelpers->EntityToBCompatRef(pEntity);
-    if (g_Hooked[index] == nullptr)
+    if (!IsEntityIndexInRange(index))
     {
-        smutils->LogError(myself, "Entity Hook listener %d is nullptr. Skipped.", index);
+        // out-of-range
+        smutils->LogError(myself, "Failed to unhook entity %d -> out-of-range.", index);
         return;
     }
-     
+
+    if (g_Hooked[index] == nullptr)
+    {
+        //smutils->LogError(myself, "Entity Hook listener %d is nullptr. Skipped.", index);
+        return;
+    }
+
     delete g_Hooked[index];
     g_Hooked[index] = nullptr;
+    //smutils->LogMessage(myself, "Unhooked entity %d", index);
 }
 
 static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* params)

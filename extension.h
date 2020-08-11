@@ -27,7 +27,7 @@ private:
 
 public:
 	void HookEntity(CBaseEntity* pEntity);
-	void UnhookEntity(CBaseEntity* pEntity);
+	void UnhookEntity(int index);
 
 };
 
