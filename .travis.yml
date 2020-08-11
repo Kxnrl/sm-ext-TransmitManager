@@ -47,8 +47,8 @@ deploy:
   provider: releases
   api_key: $token
   file:
-  - build/package/addons/sourcemod/extensions/kxnrl.hooks.ext.2.csgo.dll
-  - build/package/addons/sourcemod/extensions/kxnrl.hooks.ext.2.csgo.so
+  - build/package/addons/sourcemod/extensions/TransmitManager.ext.2.csgo.dll
+  - build/package/addons/sourcemod/extensions/TransmitManager.ext.2.csgo.so
   - build/package/addons/sourcemod/scripting/include/TransmitManager.inc
   on:
     repo: Kxnrl/sm-ext-TransmitManager
