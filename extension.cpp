@@ -6,8 +6,8 @@
 
 constexpr auto MAX_EDICT = 2048;
 
-TransmitManager g_TransmitManager;
-SMEXT_LINK(&g_TransmitManager);
+TransmitManager g_Transmit;
+SMEXT_LINK(&g_Transmit);
 
 IGameConfig* g_pGameConf = nullptr;
 ISDKHooks* g_pSDKHooks = nullptr;
@@ -22,7 +22,7 @@ struct HookingEntity
         bRemoveFlags = false;
         iOwnerEntity = -1;
         iEntityIndex = gamehelpers->EntityToBCompatRef(pEntity);
-        SourceHookId = SH_ADD_MANUALHOOK(SetTransmit, pEntity, SH_MEMBER(&g_TransmitManager, &TransmitManager::Hook_SetTransmit), false);
+        SourceHookId = SH_ADD_MANUALHOOK(SetTransmit, pEntity, SH_MEMBER(&g_Transmit, &TransmitManager::Hook_SetTransmit), false);
 
         for (auto i = 1; i < SM_MAXPLAYERS; i++)
         {
@@ -142,18 +142,21 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
 bool TransmitManager::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
     sharesys->AddDependency(myself, "sdkhooks.ext", true, true);
-    if (!sharesys->RequestInterface(SMINTERFACE_SDKHOOKS_NAME, SMINTERFACE_SDKHOOKS_VERSION, myself, reinterpret_cast<SMInterface**>(&g_pSDKHooks))) {
+    if (!sharesys->RequestInterface(SMINTERFACE_SDKHOOKS_NAME, SMINTERFACE_SDKHOOKS_VERSION, myself, reinterpret_cast<SMInterface**>(&g_pSDKHooks)))
+    {
         smutils->Format(error, maxlen, "Cannot get SDKHooks Interface");
         return false;
     }
 
-    if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlen)) {
+    if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlen))
+    {
         smutils->Format(error, maxlen, "Failed to load SDKHooks gamedata.");
         return false;
     }
 
-    int offset = -1;
-    if (!g_pGameConf->GetOffset("SetTransmit", &offset)) {
+    auto offset = -1;
+    if (!g_pGameConf->GetOffset("SetTransmit", &offset))
+    {
         smutils->Format(error, maxlen, "Failed to load 'SetTransmit' offset.");
         return false;
     }
@@ -214,7 +217,7 @@ void TransmitManager::OnEntityDestroyed(CBaseEntity* pEntity)
 void TransmitManager::OnClientPutInServer(int client)
 {
     auto *pPlayer = playerhelpers->GetGamePlayer(client);
-    if (!pPlayer || pPlayer->IsFakeClient())
+    if (!pPlayer || pPlayer->IsSourceTV() || pPlayer->IsReplay())
     {
         return;
     }
@@ -234,7 +237,7 @@ void TransmitManager::OnClientPutInServer(int client)
 void TransmitManager::OnClientDisconnecting(int client)
 {
     auto* pPlayer = playerhelpers->GetGamePlayer(client);
-    if (!pPlayer || pPlayer->IsFakeClient())
+    if (!pPlayer || pPlayer->IsSourceTV() || pPlayer->IsReplay() || !pPlayer->IsInGame())
     {
         // not in-game = no hook
         return;
@@ -339,7 +342,7 @@ static cell_t Native_AddEntityHooks(IPluginContext* pContext, const cell_t* para
         return pContext->ThrowNativeError("Entity %d is invalid.", params[1]);
     }
 
-    g_TransmitManager.HookEntity(pEntity);
+    g_Transmit.HookEntity(pEntity);
 
     return 0;
 }
