@@ -1,5 +1,9 @@
 #include "extension.h"
 
+#ifdef _WINDOWS
+#pragma comment(lib, "legacy_stdio_definitions.lib")
+#endif
+
 constexpr auto MAX_EDICT = 2048;
 
 TransmitManager g_TransmitManager;
@@ -344,6 +348,8 @@ static cell_t Native_AddEntityHooks(IPluginContext* pContext, const cell_t* para
     }
 
     g_TransmitManager.HookEntity(pEntity);
+
+    return 0;
 }
 
 sp_nativeinfo_t g_Natives[] =
