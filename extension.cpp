@@ -4,8 +4,6 @@
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #endif
 
-constexpr auto MAX_EDICT = 2048;
-
 TransmitManager g_Transmit;
 SMEXT_LINK(&g_Transmit);
 
@@ -92,7 +90,7 @@ private:
     bool bRemoveFlags;
 };
 
-HookingEntity* g_Hooked[MAX_EDICT];
+HookingEntity* g_Hooked[MAX_EDICTS];
 
 void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
 {
@@ -101,7 +99,7 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
     auto *edict = gamehelpers->EdictOfIndex(entity);
     auto client = gamehelpers->IndexOfEdict(pInfo->m_pClientEnt);
 
-    if (entity > MAX_EDICT || entity < 1 || client == entity || !edict || edict->IsFree())
+    if (!IsEntityIndexInRange(entity) || client == entity || !edict || edict->IsFree())
     {
         RETURN_META(MRES_IGNORED);
     }
@@ -179,7 +177,7 @@ void TransmitManager::SDK_OnUnload()
     playerhelpers->RemoveClientListener(this);
     g_pSDKHooks->RemoveEntityListener(this);
 
-    for (auto i = 0; i < MAX_EDICT; i++)
+    for (auto i = 0; i < MAX_EDICTS; i++)
     {
         if (g_Hooked[i] != nullptr)
         {
@@ -190,14 +188,7 @@ void TransmitManager::SDK_OnUnload()
 
 void TransmitManager::OnEntityDestroyed(CBaseEntity* pEntity)
 {
-    if (!pEntity)
-    {
-        smutils->LogError(myself, "OnEntityDestroyed -> nullptr detected...");
-        return;
-    }
-
-    auto entRef = gamehelpers->EntityToReference(pEntity);
-    auto entity = gamehelpers->ReferenceToIndex(entRef);
+    auto entity = gamehelpers->EntityToBCompatRef(pEntity);
 
     if ((unsigned)entity == INVALID_EHANDLE_INDEX || (entity > 0 && entity <= playerhelpers->GetMaxClients()))
     {
@@ -222,7 +213,7 @@ void TransmitManager::OnClientPutInServer(int client)
         return;
     }
   
-    for (auto i = 1; i < MAX_EDICT; i++)
+    for (auto i = 1; i < MAX_EDICTS; i++)
     {
         if (g_Hooked[i] == nullptr)
         {
@@ -289,7 +280,7 @@ void TransmitManager::UnhookEntity(int index)
 
 static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* params)
 {
-    if (!(params[1] >= 1 && params[1] < MAX_EDICT))
+    if (!(params[1] >= 1 && params[1] < MAX_EDICTS))
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
@@ -306,7 +297,7 @@ static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* para
 
 static cell_t Native_SetEntityState(IPluginContext* pContext, const cell_t* params)
 {
-    if (!(params[1] >= 1 && params[1] < MAX_EDICT))
+    if (!(params[1] >= 1 && params[1] < MAX_EDICTS))
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
@@ -329,7 +320,7 @@ static cell_t Native_SetEntityState(IPluginContext* pContext, const cell_t* para
 
 static cell_t Native_AddEntityHooks(IPluginContext* pContext, const cell_t* params)
 {
-    if (!(params[1] >= 1 && params[1] < MAX_EDICT))
+    if (!(params[1] >= 1 && params[1] < MAX_EDICTS))
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
