@@ -26,9 +26,9 @@ jobs:
     - "./build.sh"
   - name: Windows
     os: windows
-    python: 3.8
+    python: 3
     env:
-    - PATH=/c/Python38:/c/Python38/Scripts:${PATH}
+    - PATH=/c/Python37:/c/Python37/Scripts:${PATH}
     before_script:
     - choco install -y visualstudio2019buildtools python3 --package-parameters "--add
       Microsoft.VisualStudio.Component.VC.Tools.x86.x64";
