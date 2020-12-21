@@ -9,7 +9,7 @@ env:
   - DEPS_DIR=${HOME}/deps
   - BRANCH=1.10-dev
 before_install:
-- git clone https://github.com/alliedmodders/ambuild ${DEPS_DIR}/ambuild
+- git clone -b 2.1-distutils https://github.com/alliedmodders/ambuild ${DEPS_DIR}/ambuild
 jobs:
   include:
   - name: Linux
