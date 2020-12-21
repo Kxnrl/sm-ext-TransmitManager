@@ -113,17 +113,18 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
         }
     }
 
+    // if we need block it with owner stats = trasmit
+    if (!g_Hooked[entity]->CanSee(client))
+    {
+        // blocked
+        RETURN_META(MRES_SUPERCEDE);
+    }
+
     auto owner = g_Hooked[entity]->GetOwner();
     if (owner == client)
     {
         // don't block children
         RETURN_META(MRES_IGNORED);
-    }
-
-    if (!g_Hooked[entity]->CanSee(client))
-    {
-        // blocked
-        RETURN_META(MRES_SUPERCEDE);
     }
 
     if (IsEntityIndexInRange(owner) && !g_Hooked[owner]->CanSee(client))
