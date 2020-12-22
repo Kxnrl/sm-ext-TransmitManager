@@ -32,7 +32,8 @@ jobs:
     before_script:
     - choco install -y visualstudio2019buildtools python3 --package-parameters "--add
       Microsoft.VisualStudio.Component.VC.Tools.x86.x64";
-    - (Invoke-WebRequest https://bootstrap.pypa.io/ez_setup.py).Content | python -
+    - curl https://bootstrap.pypa.io/ez_setup.py -o ez_setup.py
+    - python ez_setup.py
     - |
       pushd ${DEPS_DIR}/ambuild
       python setup.py install
