@@ -32,7 +32,7 @@ jobs:
     before_script:
     - choco install -y visualstudio2019buildtools python3 --package-parameters "--add
       Microsoft.VisualStudio.Component.VC.Tools.x86.x64";
-    - pip install -U pip setuptools
+    - pip install --user -U pip setuptools
     - |
       pushd ${DEPS_DIR}/ambuild
       python setup.py install
