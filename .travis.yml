@@ -12,18 +12,6 @@ before_install:
 - git clone -b 2.1-distutils https://github.com/alliedmodders/ambuild ${DEPS_DIR}/ambuild
 jobs:
   include:
-  - name: Linux
-    dist: xenial
-    python: 3
-    before_script:
-    - sudo apt-get install -y gcc-multilib g++-multilib binutils python3-setuptools
-    - |
-      pushd ${DEPS_DIR}/ambuild
-      sudo python3 setup.py install
-      popd
-    - chmod +x build.sh
-    script:
-    - "./build.sh"
   - name: Windows
     os: windows
     python: 3.9
@@ -39,6 +27,18 @@ jobs:
       popd
     script:
     - "./build.bat"
+  - name: Linux
+    dist: xenial
+    python: 3
+    before_script:
+    - sudo apt-get install -y gcc-multilib g++-multilib binutils python3-setuptools
+    - |
+      pushd ${DEPS_DIR}/ambuild
+      sudo python3 setup.py install
+      popd
+    - chmod +x build.sh
+    script:
+    - "./build.sh"
 before_deploy:
   - git config --local user.name "Kxnrl"
   - git config --local user.email "kyle@kxnrl.com"
