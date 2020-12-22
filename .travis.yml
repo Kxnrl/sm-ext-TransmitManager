@@ -26,14 +26,13 @@ jobs:
     - "./build.sh"
   - name: Windows
     os: windows
-    python: 3.7
+    python: 3
     env:
-    - PATH=/c/Python37:/c/Python37/Scripts:${PATH}
+    - PATH=/c/Python39:/c/Python39/Scripts:${PATH}
     before_script:
     - choco install -y visualstudio2019buildtools python3 --package-parameters "--add
       Microsoft.VisualStudio.Component.VC.Tools.x86.x64";
-    - curl https://bootstrap.pypa.io/ez_setup.py -o ez_setup.py
-    - python ez_setup.py
+    - pip install -U pip setuptools
     - |
       pushd ${DEPS_DIR}/ambuild
       python setup.py install
