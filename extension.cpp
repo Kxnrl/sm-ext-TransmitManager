@@ -292,7 +292,13 @@ static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* para
         g_Hooked[params[1]]->SetOwner(params[2]);
         return true;
     }
-        
+
+    if (params[1] >= 1 && params[1] < SM_MAXPLAYERS)
+    {
+        smutils->LogError("Entity %d is not being hook.")
+        return false;
+    }
+    
     return pContext->ThrowNativeError("Entity %d is not being hook.", params[1]);
 }
 
@@ -316,6 +322,12 @@ static cell_t Native_SetEntityState(IPluginContext* pContext, const cell_t* para
         return true;
     }
 
+    if (params[1] >= 1 && params[1] < SM_MAXPLAYERS)
+    {
+        smutils->LogError("Entity %d is not being hook.")
+        return false;
+    }
+    
     return pContext->ThrowNativeError("Entity %d is not being hook.", params[1]);
 }
 
