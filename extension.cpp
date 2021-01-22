@@ -1,4 +1,5 @@
 #include "extension.h"
+#include "ISDKHooks.h"
 
 #ifdef _WINDOWS
 #pragma comment(lib, "legacy_stdio_definitions.lib")
@@ -138,25 +139,21 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
     RETURN_META(MRES_IGNORED);
 }
 
-bool TransmitManager::SDK_OnLoad(char *error, size_t maxlen, bool late)
+bool TransmitManager::SDK_OnLoad(char *error, size_t maxlength, bool late)
 {
     sharesys->AddDependency(myself, "sdkhooks.ext", true, true);
-    if (!sharesys->RequestInterface(SMINTERFACE_SDKHOOKS_NAME, SMINTERFACE_SDKHOOKS_VERSION, myself, reinterpret_cast<SMInterface**>(&g_pSDKHooks)))
-    {
-        smutils->Format(error, maxlen, "Cannot get SDKHooks Interface");
-        return false;
-    }
+    SM_GET_IFACE(SDKHOOKS, g_pSDKHooks)
 
-    if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlen))
+    if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlength))
     {
-        smutils->Format(error, maxlen, "Failed to load SDKHooks gamedata.");
+        smutils->Format(error, maxlength, "Failed to load SDKHooks gamedata.");
         return false;
     }
 
     auto offset = -1;
     if (!g_pGameConf->GetOffset("SetTransmit", &offset))
     {
-        smutils->Format(error, maxlen, "Failed to load 'SetTransmit' offset.");
+        smutils->Format(error, maxlength, "Failed to load 'SetTransmit' offset.");
         return false;
     }
     SH_MANUALHOOK_RECONFIGURE(SetTransmit, offset, 0, 0);
@@ -173,10 +170,29 @@ bool TransmitManager::SDK_OnLoad(char *error, size_t maxlen, bool late)
     return true;
 }
 
+void TransmitManager::NotifyInterfaceDrop(SMInterface* pInterface)
+{
+    if (strcmp(pInterface->GetInterfaceName(), SMINTERFACE_SDKHOOKS_NAME) == 0)
+    {
+        g_pSDKHooks = nullptr;
+    }
+}
+
+bool TransmitManager::QueryRunning(char* error, size_t maxlength)
+{
+    SM_CHECK_IFACE(SDKHOOKS, g_pSDKHooks)
+    return true;
+}
+
 void TransmitManager::SDK_OnUnload()
 {
     playerhelpers->RemoveClientListener(this);
-    g_pSDKHooks->RemoveEntityListener(this);
+
+    // I don't know why SDKHooks dropped first.
+    if (g_pSDKHooks != nullptr)
+    {
+        g_pSDKHooks->RemoveEntityListener(this);
+    }
 
     for (auto i = 0; i < MAX_EDICTS; i++)
     {

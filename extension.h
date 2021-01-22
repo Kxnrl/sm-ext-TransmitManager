@@ -11,24 +11,22 @@ class TransmitManager : public SDKExtension, public ISMEntityListener, public IC
 public:
 	virtual bool SDK_OnLoad(char *error, size_t maxlength, bool late);
     virtual void SDK_OnUnload();
+	virtual bool QueryRunning(char* error, size_t maxlength);
+	virtual void NotifyInterfaceDrop(SMInterface* pInterface);
 
-public:
 	virtual void OnEntityDestroyed(CBaseEntity* pEntity);
 
-public:
 	virtual void OnClientPutInServer(int client);
 	virtual void OnClientDisconnecting(int client);
 
-public:
 	void Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways);
 
-private:
-	inline bool IsEntityIndexInRange(int i) { return i >= 1 && i < 2048; }
-
-public:
 	void HookEntity(CBaseEntity* pEntity);
-	void UnhookEntity(int index);
 
+private:
+	void UnhookEntity(int index);
 };
+
+inline bool IsEntityIndexInRange(int i) { return i >= 1 && i < 2048; }
 
 #endif

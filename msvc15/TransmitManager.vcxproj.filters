@@ -21,7 +21,7 @@
     <ClCompile Include="..\extension.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Extension\sourcemod\public\smsdk_ext.cpp">
+    <ClCompile Include="..\..\..\Extension\sourcemod\sourcemod-1.10\public\smsdk_ext.cpp">
       <Filter>SourceMod SDK</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +32,7 @@
     <ClInclude Include="..\smsdk_config.h">
       <Filter>SourceMod SDK</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Extension\sourcemod\public\smsdk_ext.h">
+    <ClInclude Include="..\..\..\Extension\sourcemod\sourcemod-1.10\public\smsdk_ext.h">
       <Filter>SourceMod SDK</Filter>
     </ClInclude>
   </ItemGroup>
