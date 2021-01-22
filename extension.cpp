@@ -295,7 +295,7 @@ static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* para
 
     if (params[1] >= 1 && params[1] < SM_MAXPLAYERS)
     {
-        smutils->LogError(myself, "Entity %d is not being hook.")
+        smutils->LogError(myself, "Entity %d is not being hook.");
         return false;
     }
     
@@ -324,7 +324,7 @@ static cell_t Native_SetEntityState(IPluginContext* pContext, const cell_t* para
 
     if (params[1] >= 1 && params[1] < SM_MAXPLAYERS)
     {
-        smutils->LogError(myslef, "Entity %d is not being hook.")
+        smutils->LogError(myself, "Entity %d is not being hook.");
         return false;
     }
     
