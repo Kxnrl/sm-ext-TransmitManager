@@ -128,7 +128,7 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
         RETURN_META(MRES_IGNORED);
     }
 
-    if (IsEntityIndexInRange(owner) && !g_Hooked[owner]->CanSee(client))
+    if (IsEntityIndexInRange(owner) && g_Hooked[owner] != nullptr && !g_Hooked[owner]->CanSee(client))
     {
         // blocked
         RETURN_META(MRES_SUPERCEDE);
