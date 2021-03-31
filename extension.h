@@ -27,6 +27,6 @@ private:
 	void UnhookEntity(int index);
 };
 
-inline bool IsEntityIndexInRange(int i) { return i >= 1 && i < 2048; }
+inline bool IsEntityIndexInRange(int i) { return i >= 1 && i < MAX_EDICTS; }
 
 #endif

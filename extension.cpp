@@ -16,25 +16,46 @@ SH_DECL_MANUALHOOK2_void(SetTransmit, 0, 0, 0, CCheckTransmitInfo*, bool);
 
 struct HookingEntity
 {
-    HookingEntity(CBaseEntity *pEntity)
+    HookingEntity(CBaseEntity* pEntity)
     {
         bRemoveFlags = false;
         iOwnerEntity = -1;
         iEntityIndex = gamehelpers->EntityToBCompatRef(pEntity);
         SourceHookId = SH_ADD_MANUALHOOK(SetTransmit, pEntity, SH_MEMBER(&g_Transmit, &TransmitManager::Hook_SetTransmit), false);
 
-        for (auto i = 1; i < SM_MAXPLAYERS; i++)
+        // for css, gotv is 65
+        for (auto i = 1; i <= SM_MAXPLAYERS; i++)
         {
             // can see by default
             bCanTransmit[i] = true;
         }
 
-        auto *pName = gamehelpers->GetEntityClassname(pEntity);
-        if (pName != nullptr && (V_strcmp(pName, "info_particle_system") == 0 || V_strcmp(pName, "light_dynamic") == 0))
+        auto* pName = gamehelpers->GetEntityClassname(pEntity);
+        if (pName != nullptr && (
+            V_strcasecmp(pName, "info_particle_system") == 0 ||
+            V_strcasecmp(pName, "light_dynamic") == 0 ||
+            V_strcasecmp(pName, "env_cascade_light") == 0 ||
+            V_strcasecmp(pName, "env_projectedtexture") == 0 ||
+            V_strcasecmp(pName, "env_screenoverlay") == 0 ||
+            V_strcasecmp(pName, "env_fog_controller") == 0 ||
+            V_strcasecmp(pName, "env_lightglow") == 0 ||
+            V_strcasecmp(pName, "env_particlesmokegrenade") == 0 ||
+            V_strcasecmp(pName, "env_global_light") == 0 ||
+            V_strcasecmp(pName, "env_sun") == 0 ||
+            V_strcasecmp(pName, "env_sprite") == 0 ||
+            V_strcasecmp(pName, "point_camera") == 0 ||
+            V_strcasecmp(pName, "point_viewproxy") == 0 ||
+            V_strcasecmp(pName, "inferno") == 0 ||
+            V_strcasecmp(pName, "sunshine_shadow_control") == 0 ||
+            V_strcasecmp(pName, "cfe_player_decal") == 0 ||
+
+            V_strncasecmp(pName, "point_viewcontrol", 17) == 0 ||
+            V_strncasecmp(pName, "env_fire", 8) == 0 ||
+            V_strncasecmp(pName, "color_correction", 16) == 0))
         {
             bRemoveFlags = true;
 
-            auto *edict = gamehelpers->EdictOfIndex(iEntityIndex);
+            auto* edict = gamehelpers->EdictOfIndex(iEntityIndex);
             if (edict)
             {
                 auto flags = edict->m_fStateFlags;
@@ -54,7 +75,8 @@ struct HookingEntity
 
     bool CanSee(int client)
     {
-        if (iEntityIndex == client || iOwnerEntity == client)
+        // remove self bypass
+        if (iEntityIndex == client) /*|| iOwnerEntity == client*/
         {
             // self or children
             return true;
@@ -86,7 +108,7 @@ struct HookingEntity
 private:
     int SourceHookId;
     int iEntityIndex;
-    bool bCanTransmit[SM_MAXPLAYERS];
+    bool bCanTransmit[SM_MAXPLAYERS + 1];
     int iOwnerEntity;
     bool bRemoveFlags;
 };
@@ -95,9 +117,9 @@ HookingEntity* g_Hooked[MAX_EDICTS];
 
 void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
 {
-    auto *bcref = META_IFACEPTR(CBaseEntity);
+    auto* bcref = META_IFACEPTR(CBaseEntity);
     auto entity = gamehelpers->EntityToBCompatRef(bcref);
-    auto *edict = gamehelpers->EdictOfIndex(entity);
+    auto* edict = gamehelpers->EdictOfIndex(entity);
     auto client = gamehelpers->IndexOfEdict(pInfo->m_pClientEnt);
 
     if (!IsEntityIndexInRange(entity) || client == entity || !edict || edict->IsFree())
@@ -139,16 +161,16 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
     RETURN_META(MRES_IGNORED);
 }
 
-bool TransmitManager::SDK_OnLoad(char *error, size_t maxlength, bool late)
+bool TransmitManager::SDK_OnLoad(char* error, size_t maxlength, bool late)
 {
     sharesys->AddDependency(myself, "sdkhooks.ext", true, true);
     SM_GET_IFACE(SDKHOOKS, g_pSDKHooks)
 
-    if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlength))
-    {
-        smutils->Format(error, maxlength, "Failed to load SDKHooks gamedata.");
-        return false;
-    }
+        if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlength))
+        {
+            smutils->Format(error, maxlength, "Failed to load SDKHooks gamedata.");
+            return false;
+        }
 
     auto offset = -1;
     if (!g_pGameConf->GetOffset("SetTransmit", &offset))
@@ -181,7 +203,7 @@ void TransmitManager::NotifyInterfaceDrop(SMInterface* pInterface)
 bool TransmitManager::QueryRunning(char* error, size_t maxlength)
 {
     SM_CHECK_IFACE(SDKHOOKS, g_pSDKHooks)
-    return true;
+        return true;
 }
 
 void TransmitManager::SDK_OnUnload()
@@ -224,12 +246,12 @@ void TransmitManager::OnEntityDestroyed(CBaseEntity* pEntity)
 
 void TransmitManager::OnClientPutInServer(int client)
 {
-    auto *pPlayer = playerhelpers->GetGamePlayer(client);
+    auto* pPlayer = playerhelpers->GetGamePlayer(client);
     if (!pPlayer || pPlayer->IsSourceTV() || pPlayer->IsReplay())
     {
         return;
     }
-  
+
     for (auto i = 1; i < MAX_EDICTS; i++)
     {
         if (g_Hooked[i] == nullptr)
@@ -297,7 +319,7 @@ void TransmitManager::UnhookEntity(int index)
 
 static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* params)
 {
-    if (!(params[1] >= 1 && params[1] < MAX_EDICTS))
+    if (!IsEntityIndexInRange(params[1]))
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
@@ -309,24 +331,24 @@ static cell_t Native_SetEntityOwner(IPluginContext* pContext, const cell_t* para
         return true;
     }
 
-    if (params[1] >= 1 && params[1] < SM_MAXPLAYERS)
+    if (params[1] >= 1 && params[1] < playerhelpers->GetMaxClients())
     {
         smutils->LogError(myself, "Entity %d is not being hook.", params[1]);
         return false;
     }
-    
+
     return pContext->ThrowNativeError("Entity %d is not being hook.", params[1]);
 }
 
 static cell_t Native_SetEntityState(IPluginContext* pContext, const cell_t* params)
 {
-    if (!(params[1] >= 1 && params[1] < MAX_EDICTS))
+    if (!IsEntityIndexInRange(params[1]))
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
     }
 
-    auto *pPlayer = playerhelpers->GetGamePlayer(params[2]);
+    auto* pPlayer = playerhelpers->GetGamePlayer(params[2]);
     if (!pPlayer || !pPlayer->IsInGame())
     {
         return pContext->ThrowNativeError("Client %d is invalid.", params[2]);
@@ -338,24 +360,24 @@ static cell_t Native_SetEntityState(IPluginContext* pContext, const cell_t* para
         return true;
     }
 
-    if (params[1] >= 1 && params[1] < SM_MAXPLAYERS)
+    if (params[1] >= 1 && params[1] < playerhelpers->GetMaxClients())
     {
         smutils->LogError(myself, "Entity %d is not being hook.", params[1]);
         return false;
     }
-    
+
     return pContext->ThrowNativeError("Entity %d is not being hook.", params[1]);
 }
 
 static cell_t Native_AddEntityHooks(IPluginContext* pContext, const cell_t* params)
 {
-    if (!(params[1] >= 1 && params[1] < MAX_EDICTS))
+    if (!IsEntityIndexInRange(params[1]))
     {
         // out-of-range
         return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
     }
 
-    auto *pEntity = gamehelpers->ReferenceToEntity(params[1]);
+    auto* pEntity = gamehelpers->ReferenceToEntity(params[1]);
     if (!pEntity)
     {
         // nuull
@@ -367,10 +389,46 @@ static cell_t Native_AddEntityHooks(IPluginContext* pContext, const cell_t* para
     return 0;
 }
 
+static cell_t Native_GetEntityState(IPluginContext* pContext, const cell_t* params)
+{
+    if (!IsEntityIndexInRange(params[1]))
+    {
+        // out-of-range
+        return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
+    }
+
+    auto* pPlayer = playerhelpers->GetGamePlayer(params[2]);
+    if (!pPlayer || !pPlayer->IsInGame())
+    {
+        return pContext->ThrowNativeError("Client %d is invalid.", params[2]);
+    }
+
+    if (g_Hooked[params[1]] == nullptr)
+    {
+        // can see
+        return true;
+    }
+
+    return g_Hooked[params[1]]->CanSee(params[2]);
+}
+
+static cell_t Native_IsEntityHooked(IPluginContext* pContext, const cell_t* params)
+{
+    if (!IsEntityIndexInRange(params[1]))
+    {
+        // out-of-range
+        return pContext->ThrowNativeError("Entity %d is out-of-range.", params[1]);
+    }
+
+    return g_Hooked[params[1]] != nullptr;
+}
+
 sp_nativeinfo_t g_Natives[] =
 {
     {"TransmitManager_AddEntityHooks", Native_AddEntityHooks},
     {"TransmitManager_SetEntityOwner", Native_SetEntityOwner},
     {"TransmitManager_SetEntityState", Native_SetEntityState},
+    {"TransmitManager_GetEntityState", Native_GetEntityState},
+    {"TransmitManager_IsEntityHooked", Native_IsEntityHooked},
     {nullptr, nullptr},
 };

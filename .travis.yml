@@ -42,7 +42,7 @@ jobs:
 before_deploy:
   - git config --local user.name "Kxnrl"
   - git config --local user.email "kyle@kxnrl.com"
-  - export TRAVIS_TAG=release-$TRAVIS_BUILD_NUMBER
+  - export TRAVIS_TAG=release-$TRAVIS_OS_NAME-$TRAVIS_BUILD_NUMBER
   - git tag $TRAVIS_TAG
 deploy:
   provider: releases

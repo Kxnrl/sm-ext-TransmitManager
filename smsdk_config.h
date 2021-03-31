@@ -3,7 +3,7 @@
 
 #define SMEXT_CONF_NAME			"Transmit Manager"
 #define SMEXT_CONF_DESCRIPTION	""
-#define SMEXT_CONF_VERSION		"1.0.1" 
+#define SMEXT_CONF_VERSION		"1.1" 
 #define SMEXT_CONF_AUTHOR		"Kyle \"Kxnrl\" Frankiss"
 #define SMEXT_CONF_URL			"https://www.kxnrl.com"
 #define SMEXT_CONF_LOGTAG		"TransmitManager"
