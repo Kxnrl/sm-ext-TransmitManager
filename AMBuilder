@@ -28,4 +28,11 @@ for sdk_name in Extension.sdks:
   
   binary = Extension.HL2Config(project, projectName + '.ext.' + sdk.ext, sdk)
 
+  if sys.platform == 'win32':
+    binary.compiler.postlink += [ 'legacy_stdio_definitions.lib' ]
+  elif sys.platform == 'linux' or sys.platform == 'linux2':
+    binary.compiler.cxxflags += [ '-std=c++14' ]
+    binary.compiler.cxxflags += [ '-Wno-class-memaccess' ]
+    binary.compiler.cxxflags += [ '-include', 'mathlib/mathlib.h' ]
+
 Extension.extensions = builder.Add(project)
