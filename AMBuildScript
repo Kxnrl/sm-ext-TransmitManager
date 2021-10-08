@@ -413,7 +413,7 @@ class ExtensionConfig(object):
         return link
 
       linker = make_linker(source_path, output_path)
-      compiler.linkflags[0:0] = [compiler.Dep(library, linker)]
+      compiler.postlink.append(compiler.Dep(library, linker))
 
     return binary
 
