@@ -7,7 +7,8 @@ branches:
 env:
   global:
   - DEPS_DIR=${HOME}/deps
-  - BRANCH=1.10-dev
+  - SMBRANCH=1.10-dev
+  - MMBRANCH=1.11-dev
 before_install:
 - git clone -b 2.1-distutils https://github.com/alliedmodders/ambuild ${DEPS_DIR}/ambuild
 jobs:
