@@ -7,10 +7,7 @@ branches:
 env:
   global:
   - DEPS_DIR=${HOME}/deps
-  - SMBRANCH=1.10-dev
-  - MMBRANCH=1.11-dev
-before_install:
-- git clone -b 2.1-distutils https://github.com/alliedmodders/ambuild ${DEPS_DIR}/ambuild
+
 jobs:
   include:
   - name: Windows
@@ -19,22 +16,24 @@ jobs:
     before_install:
       - choco install python --version=3.8.2
       - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
+    env:
+      - SMBRANCH=1.10-dev
+      - MMBRANCH=1.11-dev
     before_script:
       - choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
     script:
       - ./build.bat
   - name: Linux
-    dist: xenial
-    python: 3
+    dist: bionic
+    python: 3.7
+    env:
+      - SMBRANCH=1.10-dev
+      - MMBRANCH=1.11-dev
     before_script:
-    - sudo apt-get install -y gcc-multilib g++-multilib binutils python3-setuptools
-    - |
-      pushd ${DEPS_DIR}/ambuild
-      sudo python3 setup.py install
-      popd
-    - chmod +x build.sh
+      - chmod +x ./build.sh
     script:
-    - "./build.sh"
+      - ./build.sh
+
 before_deploy:
   - git config --local user.name "Kxnrl"
   - git config --local user.email "kyle@kxnrl.com"
