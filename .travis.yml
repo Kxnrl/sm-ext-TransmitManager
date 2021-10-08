@@ -1,18 +1,16 @@
 language: cpp
+
 branches:
   only:
   - master
   except:
   - /^(?i:release)-.*$/
-env:
-  global:
-  - DEPS_DIR=${HOME}/deps
 
 jobs:
   include:
   - name: Windows
     os: windows
-    python: 3.8
+    python: 3.7
     before_install:
       - choco install python --version=3.8.2
       - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
@@ -34,17 +32,21 @@ jobs:
     script:
       - ./build.sh
 
+
 before_deploy:
   - git config --local user.name "Kxnrl"
   - git config --local user.email "kyle@kxnrl.com"
   - export TRAVIS_TAG=release-$TRAVIS_OS_NAME-$TRAVIS_BUILD_NUMBER
   - git tag $TRAVIS_TAG
+
 deploy:
   provider: releases
   api_key: $token
   file:
   - build/package/addons/sourcemod/extensions/TransmitManager.ext.2.csgo.dll
   - build/package/addons/sourcemod/extensions/TransmitManager.ext.2.csgo.so
+  - build/package/addons/sourcemod/extensions/TransmitManager.ext.2.insurgency.dll
+  - build/package/addons/sourcemod/extensions/TransmitManager.ext.2.insurgency.so
   - build/package/addons/sourcemod/scripting/include/TransmitManager.inc
   on:
     repo: Kxnrl/sm-ext-TransmitManager

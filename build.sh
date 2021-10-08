@@ -1,19 +1,30 @@
 #!/bin/bash
 
+sudo apt-get update
+sudo apt-get install -y gcc-multilib g++-multilib
+
 set -e
 
 EXT_DIR=$(pwd)
 
-git clone https://github.com/alliedmodders/metamod-source --branch "$MMBRANCH" --single-branch "$EXT_DIR/mmsource-$MMBRANCH"
-git clone https://github.com/alliedmodders/hl2sdk --branch csgo --single-branch "$EXT_DIR/hl2sdk-csgo"
-git clone https://github.com/alliedmodders/sourcemod --recursive --branch "$SMBRANCH" --single-branch "$EXT_DIR/sourcemod-$SMBRANCH"
+#clone ambuild
+echo "Installing ambuild ..."
+git clone https://github.com/alliedmodders/ambuild $HOME/ambuild
+pushd $HOME/ambuild
+sudo python setup.py install
+popd
 
+#clone sourcemod / metamod / hl2sdk
+echo "Installing Sourcemod/Metamod/HL2SDK ..."
+git clone https://github.com/alliedmodders/sourcemod --recursive --branch $SMBRANCH --single-branch "$EXT_DIR/sourcemod"
+git clone https://github.com/alliedmodders/metamod-source --recursive --branch $MMBRANCH --single-branch "$EXT_DIR/metamod"
+git clone https://github.com/alliedmodders/hl2sdk --recursive --branch csgo --single-branch "$EXT_DIR/hl2sdk-csgo"
+git clone https://github.com/alliedmodders/hl2sdk --recursive --branch insurgency --single-branch "$EXT_DIR/hl2sdk-insurgency"
+
+#build
 mkdir -p "$EXT_DIR/build"
 pushd "$EXT_DIR/build"
-python3 "$EXT_DIR/configure.py" --enable-optimize --mms-path "$EXT_DIR/mmsource-$MMBRANCH" --sm-path "$EXT_DIR/sourcemod-$SMBRANCH" --hl2sdk-root "$EXT_DIR" -s csgo 
+#CC=clang CXX=clang++
+python "$EXT_DIR/configure.py" --enable-optimize --sm-path "$EXT_DIR/sourcemod" --mms-path "$EXT_DIR/metamod" --hl2sdk-root "$EXT_DIR" --sdks=csgo,insurgency
 ambuild
-
-# might be optional
-strip package/addons/sourcemod/extensions/TransmitManager.ext.2.csgo.so
-
 popd

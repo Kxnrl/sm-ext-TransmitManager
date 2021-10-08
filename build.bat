@@ -1,5 +1,10 @@
-set EXT_DIR="%cd%"
+echo "Set environment"
+set EXT_DIR=%cd%
+set DEP_DIR=%EXT_DIR%\build-windows
 set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
+mkdir "%DEP_DIR%"
+
+cd %DEP_DIR%
 
 if "%VSCMD_VER%"=="" (
 	set MAKE=
@@ -8,15 +13,45 @@ if "%VSCMD_VER%"=="" (
 	call %VCVARSALL% x86
 )
 
-git clone https://github.com/alliedmodders/metamod-source --branch "%MMBRANCH%" --single-branch "%EXT_DIR%/mmsource-%MMBRANCH%"
-git clone https://github.com/alliedmodders/hl2sdk --branch csgo --single-branch "%EXT_DIR%/hl2sdk-csgo"
-git clone https://github.com/alliedmodders/sourcemod --recursive --branch "%SMBRANCH%" --single-branch "%EXT_DIR%/sourcemod-%SMBRANCH%"
-
-mkdir "%EXT_DIR%/build"
-pushd "%EXT_DIR%/build"
-python "%EXT_DIR%/configure.py" --enable-optimize --mms-path "%EXT_DIR%/mmsource-%MMBRANCH%" --sm-path "%EXT_DIR%/sourcemod-%SMBRANCH%" --hl2sdk-root "%EXT_DIR%" -s csgo || goto error
-ambuild || goto error
+:: Install ambuild
+echo "Install ambuild"
+git clone https://github.com/alliedmodders/ambuild
+pushd ambuild
+python setup.py install
 popd
 
-:error
-exit /b %errorlevel%
+:: Getting sourcemod
+
+echo "Download sourcemod"
+git clone https://github.com/alliedmodders/sourcemod --recursive --branch %SMBRANCH% --single-branch sourcemod
+
+pushd sourcemod
+set SOURCEMOD=%cd%
+popd
+
+:: Getting metamod
+
+echo "Download metamod"
+git clone https://github.com/alliedmodders/metamod-source --recursive --branch %MMBRANCH% --single-branch metamod
+
+pushd metamod
+set METAMOD=%cd%
+popd
+
+:: Getting hl2sdk
+
+echo "Download hl2sdk-csgo"
+git clone https://github.com/alliedmodders/hl2sdk --recursive --branch csgo --single-branch hl2sdk-csgo
+echo "Download hl2sdk-insurgency"
+git clone https://github.com/alliedmodders/hl2sdk --recursive --branch insurgency --single-branch hl2sdk-insurgency
+
+:: Start build
+
+echo "Build"
+cd %EXT_DIR%
+
+mkdir build
+pushd build
+python "%EXT_DIR%/configure.py" --enable-optimize --sm-path "%SOURCEMOD%" --mms-path "%METAMOD%" --hl2sdk-root "%DEP_DIR%" --sdks=csgo,insurgency
+ambuild || exit /b %errorlevel%
+popd
