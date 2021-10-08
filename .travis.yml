@@ -15,19 +15,14 @@ jobs:
   include:
   - name: Windows
     os: windows
-    python: 3.9
-    env:
-    - PATH=/c/Python39:/c/Python39/Scripts:${PATH}
+    python: 3.8
+    before_install:
+      - choco install python --version=3.8.2
+      - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
     before_script:
-    - choco install -y visualstudio2019buildtools python3 --package-parameters "--add
-      Microsoft.VisualStudio.Component.VC.Tools.x86.x64";
-    - pip install --user -U pip setuptools
-    - |
-      pushd ${DEPS_DIR}/ambuild
-      python setup.py install
-      popd
+      - choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
     script:
-    - "./build.bat"
+      - ./build.bat
   - name: Linux
     dist: xenial
     python: 3
