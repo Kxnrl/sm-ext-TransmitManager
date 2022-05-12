@@ -50,6 +50,8 @@ struct HookingEntity
             V_strcasecmp(pName, "cfe_player_decal") == 0 ||
             V_strcasecmp(pName, "func_precipitation") == 0 ||
             V_strcasecmp(pName, "cs_ragdoll") == 0 ||
+            
+            V_strcasecmp(pName, "info_target") == 0 ||
 
             V_strncasecmp(pName, "point_viewcontrol", 17) == 0 ||
             V_strncasecmp(pName, "env_fire", 8) == 0 ||
