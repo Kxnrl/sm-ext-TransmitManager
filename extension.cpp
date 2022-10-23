@@ -18,16 +18,16 @@ struct HookingEntity
 {
     HookingEntity(CBaseEntity* pEntity)
     {
-        bRemoveFlags = false;
-        iOwnerEntity = -1;
-        iEntityIndex = gamehelpers->EntityToBCompatRef(pEntity);
-        SourceHookId = SH_ADD_MANUALHOOK(SetTransmit, pEntity, SH_MEMBER(&g_Transmit, &TransmitManager::Hook_SetTransmit), false);
+        m_bRemoveFlags = false;
+        m_nOwnerEntity = -1;
+        m_iEntityIndex = gamehelpers->EntityToBCompatRef(pEntity);
+        m_iHookId = SH_ADD_MANUALHOOK(SetTransmit, pEntity, SH_MEMBER(&g_Transmit, &TransmitManager::Hook_SetTransmit), false);
 
         // for css, gotv is 65
         for (auto i = 1; i <= SM_MAXPLAYERS; i++)
         {
             // can see by default
-            bCanTransmit[i] = true;
+            m_bCanTransmit[i] = true;
         }
 
         auto* pName = gamehelpers->GetEntityClassname(pEntity);
@@ -57,9 +57,9 @@ struct HookingEntity
             V_strncasecmp(pName, "env_fire", 8) == 0 ||
             V_strncasecmp(pName, "color_correction", 16) == 0))
         {
-            bRemoveFlags = true;
+            m_bRemoveFlags = true;
 
-            auto* edict = gamehelpers->EdictOfIndex(iEntityIndex);
+            auto* edict = gamehelpers->EdictOfIndex(m_iEntityIndex);
             if (edict)
             {
                 auto flags = edict->m_fStateFlags;
@@ -70,51 +70,51 @@ struct HookingEntity
 
     ~HookingEntity()
     {
-        if (SourceHookId)
+        if (m_iHookId)
         {
-            SH_REMOVE_HOOK_ID(SourceHookId);
-            SourceHookId = 0;
+            SH_REMOVE_HOOK_ID(m_iHookId);
+            m_iHookId = 0;
         }
     }
 
     bool CanSee(int client)
     {
         // remove self bypass
-        if (iEntityIndex == client) /*|| iOwnerEntity == client*/
+        if (m_iEntityIndex == client)
         {
             // self or children
             return true;
         }
 
-        return bCanTransmit[client];
+        return m_bCanTransmit[client];
     }
 
     void SetSee(int client, bool can)
     {
-        bCanTransmit[client] = can;
+        m_bCanTransmit[client] = can;
     }
 
     int GetOwner()
     {
-        return iOwnerEntity;
+        return m_nOwnerEntity;
     }
 
     void SetOwner(int owner)
     {
-        iOwnerEntity = owner;
+        m_nOwnerEntity = owner;
     }
 
     bool ShouldRemove()
     {
-        return bRemoveFlags;
+        return m_bRemoveFlags;
     }
 
 private:
-    int SourceHookId;
-    int iEntityIndex;
-    bool bCanTransmit[SM_MAXPLAYERS + 1];
-    int iOwnerEntity;
-    bool bRemoveFlags;
+    int m_iHookId;
+    int m_iEntityIndex;
+    bool m_bCanTransmit[SM_MAXPLAYERS + 1];
+    int m_nOwnerEntity;
+    bool m_bRemoveFlags;
 };
 
 HookingEntity* g_Hooked[MAX_EDICTS];
@@ -393,6 +393,31 @@ static cell_t Native_AddEntityHooks(IPluginContext* pContext, const cell_t* para
     return 0;
 }
 
+static cell_t Native_RemoveEntHooks(IPluginContext* pContext, const cell_t* params)
+{
+    const auto index = params[1];
+
+    if (!IsEntityIndexInRange(index))
+    {
+        // out-of-range
+        return pContext->ThrowNativeError("Entity %d is out-of-range.", index);
+    }
+
+    auto* pEntity = gamehelpers->ReferenceToEntity(index);
+    if (!pEntity)
+    {
+        // nuull
+        return pContext->ThrowNativeError("Entity %d is invalid.", index);
+    }
+
+    if (g_Hooked[index] != nullptr)
+    {
+        delete g_Hooked[index];
+    }
+
+    return 0;
+}
+
 static cell_t Native_GetEntityState(IPluginContext* pContext, const cell_t* params)
 {
     if (!IsEntityIndexInRange(params[1]))
@@ -430,6 +455,7 @@ static cell_t Native_IsEntityHooked(IPluginContext* pContext, const cell_t* para
 sp_nativeinfo_t g_Natives[] =
 {
     {"TransmitManager_AddEntityHooks", Native_AddEntityHooks},
+    {"TransmitManager_RemoveEntHooks", Native_RemoveEntHooks},
     {"TransmitManager_SetEntityOwner", Native_SetEntityOwner},
     {"TransmitManager_SetEntityState", Native_SetEntityState},
     {"TransmitManager_GetEntityState", Native_GetEntityState},
