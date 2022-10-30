@@ -50,7 +50,7 @@ struct HookingEntity
             V_strcasecmp(pName, "cfe_player_decal") == 0 ||
             V_strcasecmp(pName, "func_precipitation") == 0 ||
             V_strcasecmp(pName, "cs_ragdoll") == 0 ||
-            
+
             V_strcasecmp(pName, "info_target") == 0 ||
 
             V_strncasecmp(pName, "point_viewcontrol", 17) == 0 ||
@@ -131,6 +131,12 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
         RETURN_META(MRES_IGNORED);
     }
 
+    if (g_Hooked[entity] == nullptr)
+    {
+        smutils->LogError(myself, "Why Hooked Entity is nullptr <%d.%s>", entity, gamehelpers->GetEntityClassname(bcref));
+        RETURN_META(MRES_IGNORED);
+    }
+
     if (g_Hooked[entity]->ShouldRemove())
     {
         auto flags = edict->m_fStateFlags;
@@ -168,13 +174,13 @@ void TransmitManager::Hook_SetTransmit(CCheckTransmitInfo* pInfo, bool bAlways)
 bool TransmitManager::SDK_OnLoad(char* error, size_t maxlength, bool late)
 {
     sharesys->AddDependency(myself, "sdkhooks.ext", true, true);
-    SM_GET_IFACE(SDKHOOKS, g_pSDKHooks)
+    SM_GET_IFACE(SDKHOOKS, g_pSDKHooks);
 
-        if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlength))
-        {
-            smutils->Format(error, maxlength, "Failed to load SDKHooks gamedata.");
-            return false;
-        }
+    if (!gameconfs->LoadGameConfigFile("sdkhooks.games", &g_pGameConf, error, maxlength))
+    {
+        smutils->Format(error, maxlength, "Failed to load SDKHooks gamedata.");
+        return false;
+    }
 
     auto offset = -1;
     if (!g_pGameConf->GetOffset("SetTransmit", &offset))
